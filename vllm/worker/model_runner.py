@@ -669,7 +669,7 @@ class ModelInputForGPUBuilder(ModelRunnerInputBuilderBase[ModelInputForGPU]):
                 and batch_size <= self.runner.max_batchsize_to_capture
                 and max_decode_seq_len <= self.runner.max_seq_len_to_capture)
 
-    def build(self) -> ModelInputForGPU:
+    def build(self) -> ModelInputForGPU: # alf: attn metadata is here
         """Finalize the builder intermediate data and
         create on-device tensors.
         """
@@ -809,7 +809,7 @@ class ModelInputForGPUBuilder(ModelRunnerInputBuilderBase[ModelInputForGPU]):
             prompt_adapter_requests=prompt_adapter_requests)
 
 
-class GPUModelRunnerBase(ModelRunnerBase[TModelInputForGPU]):
+class GPUModelRunnerBase(ModelRunnerBase[TModelInputForGPU]): # alf: the class that directly interfaces with the model
     """
     Helper class for shared methods between GPU model runners.
     """
@@ -1018,7 +1018,7 @@ class GPUModelRunnerBase(ModelRunnerBase[TModelInputForGPU]):
         self,
         seq_group_metadata_list: List[SequenceGroupMetadata],
         finished_requests_ids: Optional[List[str]] = None
-    ) -> TModelInputForGPU:
+    ) -> TModelInputForGPU: # alf: including attn metadata building
         """Helper method to prepare the model input based on a given sequence
         group. Prepares metadata needed for the base model forward pass but not
         metadata for possible additional steps, e.g., sampling.

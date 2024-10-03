@@ -292,7 +292,7 @@ class LocalOrDistributedWorkerBase(WorkerBase):
         else:
             return self._get_worker_input_from_broadcast()
 
-    def execute_model(
+    def execute_model( # alf: most likley execute_model function for gpu
         self,
         execute_model_req: Optional[ExecuteModelRequest] = None,
     ) -> Optional[List[SamplerOutput]]:
@@ -300,7 +300,7 @@ class LocalOrDistributedWorkerBase(WorkerBase):
         sequences are provided."""
         start_time = time.perf_counter()
 
-        inputs = self.prepare_input(execute_model_req)
+        inputs = self.prepare_input(execute_model_req) # alf: model input preped here 
         if inputs is None:
             return None
 

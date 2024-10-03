@@ -313,6 +313,7 @@ class LLMEngine:
             observability_config=self.observability_config,
         )
 
+        # alf: kv cache init here
         if not self.model_config.embedding_mode:
             self._initialize_kv_caches()
 

@@ -336,7 +336,7 @@ class FlashInferMetadata(AttentionMetadata):
                 assert self.paged_kv_indices is not None
                 assert self.paged_kv_indptr is not None
                 assert self.paged_kv_last_page_len is not None
-                self.paged_kv_indices = self.paged_kv_indices.to(self.device)
+                self.paged_kv_indices = self.paged_kv_indices.to(self.device) # looks like paged_kv_indices was originally in cpu
                 self.paged_kv_indptr = self.paged_kv_indptr.to(self.device)
                 self.paged_kv_last_page_len = self.paged_kv_last_page_len.to(
                     self.device)
@@ -699,7 +699,7 @@ class FlashInferImpl(AttentionImpl):
                     self.kv_cache_dtype)
                 kv_cache = kv_cache.view(torch_dtype)
 
-        query = query.contiguous(
+        query = query.contiguous( # alf: k and v don't have to be contiguous
         )  # Flashinfer requires query to be contiguous
         if prefill_meta := attn_metadata.prefill_metadata:
             # We will use flash attention for prefill

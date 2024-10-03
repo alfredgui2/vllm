@@ -42,7 +42,7 @@ async def serve_http(app: FastAPI, engine: AsyncEngineClient,
 
     loop = asyncio.get_running_loop()
 
-    server_task = loop.create_task(server.serve())
+    server_task = loop.create_task(server.serve()) # alf: adding serve to server event loop
 
     def signal_handler() -> None:
         # prevents the uvicorn signal handler to exit early

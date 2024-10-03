@@ -202,6 +202,7 @@ class OpenAIServingChat(OpenAIServing):
                     and contains_trace_headers(raw_request.headers)):
                 log_tracing_disabled_warning()
 
+            # alf: generating here
             result_generator = self.async_engine_client.generate(
                 engine_inputs,
                 sampling_params,

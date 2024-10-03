@@ -100,7 +100,7 @@ async def build_async_engine_client(
     # Context manager to handle async_engine_client lifecycle
     # Ensures everything is shutdown and cleaned up on error/exit
     global engine_args
-    engine_args = AsyncEngineArgs.from_cli_args(args)
+    engine_args = AsyncEngineArgs.from_cli_args(args) # this setup engine args data class in arg_utils.py
 
     # Backend itself still global for the silly lil' health handler
     global async_engine_client
@@ -172,12 +172,13 @@ async def build_async_engine_client_from_engine_args(
         rpc_server_process = context.Process(
             target=run_rpc_server,
             args=(engine_args, UsageContext.OPENAI_API_SERVER, rpc_path))
-        rpc_server_process.start()
+        rpc_server_process.start() # alf: start the rpc server process
         logger.info("Started engine process with PID %d",
                     rpc_server_process.pid)
 
+        # alf: wait until server is ready
         try:
-            while True:
+            while True: 
                 try:
                     await rpc_client.setup()
                     break
@@ -189,8 +190,8 @@ async def build_async_engine_client_from_engine_args(
                         yield None
                         return
 
-            yield rpc_client  # type: ignore[misc]
-        finally:
+            yield rpc_client  # type: ignore[misc] yield return so that the context blocker can use
+        finally: # alf: cleanup after exiting
             # Ensure rpc server process was terminated
             rpc_server_process.terminate()
 
@@ -396,7 +397,7 @@ async def init_app(
     async_engine_client: AsyncEngineClient,
     args: Namespace,
 ) -> FastAPI:
-    app = build_app(args)
+    app = build_app(args) # alf: build the middleware and routes
 
     if args.served_model_name is not None:
         served_model_names = args.served_model_name
@@ -459,7 +460,7 @@ async def run_server(args, **uvicorn_kwargs) -> None:
     logger.info("vLLM API server version %s", VLLM_VERSION)
     logger.info("args: %s", args)
 
-    async with build_async_engine_client(args) as async_engine_client:
+    async with build_async_engine_client(args) as async_engine_client: # alf: when building the client, it will also start the rpc server in a subprocess
         # If None, creation of the client failed and we exit.
         if async_engine_client is None:
             return

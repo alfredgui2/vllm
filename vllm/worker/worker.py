@@ -32,7 +32,7 @@ from vllm.worker.worker_base import LocalOrDistributedWorkerBase, WorkerInput
 logger = init_logger(__name__)
 
 
-class Worker(LocalOrDistributedWorkerBase):
+class Worker(LocalOrDistributedWorkerBase): # alf: the most likley worker class for gpu
     """A worker class that executes (a partition of) the model on a GPU.
 
     Each worker is associated with a single GPU. The worker is responsible for

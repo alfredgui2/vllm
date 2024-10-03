@@ -45,7 +45,7 @@ class RPCClientClosedError(Exception):
     """
 
 
-class AsyncEngineRPCClient:
+class AsyncEngineRPCClient: # alf: the most likely async engine client
     """
     RPCClient that connects to the RPCServer wrapping AsyncLLMEngine.
     
@@ -234,6 +234,7 @@ class AsyncEngineRPCClient:
 
         return data
 
+    #alf: this is just tell server to do something, not waiting for a data response
     async def _send_one_way_rpc_request(self,
                                         request: RPC_REQUEST_TYPE,
                                         error_message: str,
@@ -244,7 +245,7 @@ class AsyncEngineRPCClient:
 
             await socket.send_multipart((cloudpickle.dumps(request), ))
 
-            if await socket.poll(timeout=self._data_timeout) == 0:
+            if await socket.poll(timeout=self._data_timeout) == 0: #alf: probably with epoll underlying
                 raise TimeoutError("Server didn't reply within "
                                    f"{self._data_timeout} ms")
 

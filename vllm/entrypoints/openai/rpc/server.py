@@ -32,7 +32,7 @@ class AsyncEngineRPCServer:
                  usage_context: UsageContext, rpc_path: str):
         # Initialize engine first.
         self.engine = AsyncLLMEngine.from_engine_args(
-            async_engine_args, usage_context=usage_context)
+            async_engine_args, usage_context=usage_context) # alf: it creats async llm engine
 
         # Initialize context.
         self.context = zmq.asyncio.Context()
@@ -149,7 +149,8 @@ class AsyncEngineRPCServer:
             identity,
             pickle.dumps(VLLM_RPC_SUCCESS_STR),
         ))
-
+        
+   #alf ths is kind of like http routes, handling different requests
     def _make_handler_coro(self, identity,
                            message: Frame) -> Coroutine[Any, Any, Never]:
         """Route the zmq message to the handler coroutine."""
@@ -211,7 +212,7 @@ class AsyncEngineRPCServer:
 
 async def run_server(server: AsyncEngineRPCServer):
     # Put the server task into the asyncio loop.
-    loop = asyncio.get_running_loop()
+    loop = asyncio.get_running_loop() #alf: accessing the current event loop that is running, inited by uvloop.run(...)
     server_task = loop.create_task(server.run_server_loop())
 
     # Interruption handling.

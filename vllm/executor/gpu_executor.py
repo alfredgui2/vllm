@@ -21,7 +21,7 @@ def create_worker(worker_module_name: str, worker_class_name: str,
         worker_class_name=worker_class_name,
         worker_class_fn=worker_class_fn,
     )
-    wrapper.init_worker(**kwargs)
+    wrapper.init_worker(**kwargs) # dynamically importing the worker class.
     return wrapper.worker
 
 

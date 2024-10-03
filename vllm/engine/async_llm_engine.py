@@ -78,7 +78,7 @@ class AsyncStream:
     def __init__(self, request_id: str, cancel: Callable[[str], None]) -> None:
         self.request_id = request_id
         self._cancel = cancel
-        self._queue: asyncio.Queue = asyncio.Queue()
+        self._queue: asyncio.Queue = asyncio.Queue() # used to store the request outputs
         self._finished = False
 
     def put(self, item: Union[RequestOutput, EmbeddingRequestOutput,
@@ -198,9 +198,9 @@ class RequestTracker:
         self._new_requests.put_nowait((stream, {
             "request_id": request_id,
             **engine_add_request_kwargs
-        }))
+        })) # alf: adding to the queue
 
-        self.new_requests_event.set()
+        self.new_requests_event.set() # alf: this wakes up the event loop to process the request
 
         if verbose:
             logger.info("Added request %s.", request_id)
@@ -612,7 +612,7 @@ class AsyncLLMEngine:
         self.worker_use_ray = worker_use_ray
         self.engine_use_ray = engine_use_ray
         self.log_requests = log_requests
-        self.engine = self._init_engine(*args, **kwargs)
+        self.engine = self._init_engine(*args, **kwargs) # alf: this will load all the model configs and weights
 
         # This ensures quick processing of request outputs
         # so the append to asyncio queues is not delayed,
@@ -710,7 +710,7 @@ class AsyncLLMEngine:
             executor_class = MultiprocessingGPUExecutorAsync
         else:
             from vllm.executor.gpu_executor import GPUExecutorAsync
-            executor_class = GPUExecutorAsync
+            executor_class = GPUExecutorAsync # alf: gpu is the default
         return executor_class
 
     @classmethod
@@ -729,10 +729,10 @@ class AsyncLLMEngine:
             from vllm.executor import ray_utils
             ray_utils.assert_ray_available()
 
-        executor_class = cls._get_executor_cls(engine_config)
+        executor_class = cls._get_executor_cls(engine_config) # alf: get gpu executor or other
 
         # Create the async LLM engine.
-        engine = cls(
+        engine = cls( # alf: cls returns a class
             executor_class.uses_ray,
             engine_args.engine_use_ray,
             **engine_config.to_dict(),
@@ -795,10 +795,10 @@ class AsyncLLMEngine:
         self._request_tracker = RequestTracker()
 
         self._background_loop_unshielded = asyncio.get_event_loop(
-        ).create_task(self.run_engine_loop())
+        ).create_task(self.run_engine_loop()) # alf: getting event loop from current thread
         self._background_loop_unshielded.add_done_callback(
             partial(_log_task_completion, error_callback=self._error_callback))
-        self.background_loop = asyncio.shield(self._background_loop_unshielded)
+        self.background_loop = asyncio.shield(self._background_loop_unshielded) # even if the surrounding context is cancelled, the background loop will still run
 
     def shutdown_background_loop(self) -> None:
         """
@@ -832,7 +832,7 @@ class AsyncLLMEngine:
                 num_gpus = 1
             engine_class = ray.remote(num_gpus=num_gpus)(
                 self._engine_class).remote
-        return engine_class(*args, **kwargs)
+        return engine_class(*args, **kwargs) # alf: this inits the actual llm engine
 
     async def engine_step(self, virtual_engine: int) -> bool:
         """Kick the engine to process the waiting requests.
@@ -848,7 +848,7 @@ class AsyncLLMEngine:
             try:
                 if self.engine_use_ray:
                     await self.engine.add_request.remote(  # type: ignore
-                        **new_request)
+                        **new_request) # alf: adding requests to engine
                 else:
                     await self.engine.add_request_async(**new_request)
             except ValueError as e:
@@ -865,7 +865,7 @@ class AsyncLLMEngine:
         if self.engine_use_ray:
             request_outputs = await self.engine.step.remote()  # type: ignore
         else:
-            request_outputs = await self.engine.step_async(virtual_engine)
+            request_outputs = await self.engine.step_async(virtual_engine) # alf: the engine does the real work
 
         # Put the outputs into the corresponding streams.
         # If used as a callback, then already invoked inside
@@ -896,7 +896,7 @@ class AsyncLLMEngine:
         else:
             self.engine.abort_request(request_ids)
 
-    async def run_engine_loop(self):
+    async def run_engine_loop(self): # alf: the essential request processing loop
         if self.engine_use_ray:
             pipeline_parallel_size = 1  # type: ignore
         else:
@@ -997,7 +997,7 @@ class AsyncLLMEngine:
 
         return stream.generator()
 
-    async def generate(
+    async def generate( # alf: server side generate
         self,
         inputs: PromptInputs,
         sampling_params: SamplingParams,
@@ -1070,7 +1070,7 @@ class AsyncLLMEngine:
             >>> # Process and return the final output
             >>> ...
         """
-        async for output in await self.add_request(
+        async for output in await self.add_request( # alf: this also starts the loop
                 request_id,
                 inputs,
                 sampling_params,
